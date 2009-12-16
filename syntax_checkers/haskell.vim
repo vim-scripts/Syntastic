@@ -1,7 +1,7 @@
 "============================================================================
-"File:        php.vim
+"File:        haskell.vim
 "Description: Syntax checking plugin for syntastic.vim
-"Maintainer:  Martin Grenfell <martin.grenfell at gmail dot com>
+"Maintainer:  Anthony Carapetis <anthony.carapetis at gmail dot com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -9,18 +9,22 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 "============================================================================
-if exists("loaded_php_syntax_checker")
+if exists("loaded_haskell_syntax_checker")
     finish
 endif
-let loaded_php_syntax_checker = 1
+let loaded_haskell_syntax_checker = 1
 
-"bail if the user doesnt have php installed
-if !executable("php")
+"bail if the user doesnt have ghc installed
+if !executable("ghc")
     finish
 endif
 
-function! SyntaxCheckers_php_GetLocList()
-    let makeprg = "php -l %"
-    let errorformat='%-GNo syntax errors detected in%.%#,%-GErrors parsing %.%#,%-G\s%#,%EParse error: syntax error\, %m in %f on line %l'
+" As this calls ghc, it can take a few seconds... maybe hlint or something
+" could do a good enough job?
+function! SyntaxCheckers_haskell_GetLocList()
+    let makeprg = 'ghc % -e :q'
+    let errorformat = '%-G\\s%#,%f:%l:%c:%m,%E%f:%l:%c:,%Z%m,'
+
+
     return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
 endfunction
