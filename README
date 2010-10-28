@@ -1,5 +1,7 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=2736
 
+Grab the latest version from here: http://github.com/scrooloose/syntastic/
+
 Syntastic is a syntax checking plugin that runs buffers through external syntax
 checkers as they are saved and opened. If syntax errors are detected, the user
 is notified and is happy because they didn't have to compile their code or
