@@ -2,31 +2,28 @@ This is a mirror of http://www.vim.org/scripts/script.php?script_id=2736
 
 Grab the latest version from here: http://github.com/scrooloose/syntastic/
 
-Syntastic is a syntax checking plugin that runs buffers through external syntax
-checkers as they are saved and opened. If syntax errors are detected, the user
-is notified and is happy because they didn't have to compile their code or
-execute their script to find them.
+Run for the sink and fetch a glass of water, and snatch your padded bike shorts off the clothes horse on the way back cos syntastic is gonna kick you in the ass hard enough to cause the oral ejection of your spleen.
 
-The following functionality is provided and must be enabled/activated as
-indicated in the help file:
-    * A statusline flag appears when syntax errors are detected
-    * |signs| are placed beside lines with syntax errors, where a different
-      sign is used for errors and warnings.
-    * The :Errors command is provided to open a |location-list| for
-      the syntax errors in the current buffer
+Tired of waiting for your rails environment to load only to find you failed @ syntax??
 
-Syntastic comes in two parts: the syntax checker plugins, and the core script
-(i.e. syntastic.vim). The syntax checker plugins are defined on a per-filetype
-basis where each one wraps up an external syntax checking program. The core
-script delegates off to these plugins and uses their output to provide the
-syntastic functionality. Currently, syntax checking plugins exist for eruby,
-haml, html, javascript, php, python, ruby and sass.
+SCREW THAT!
 
-If your language is not supported then see |syntastic-syntax-checkers| for
-details on how to implement a syntax checking plugin, and be sure to send me a
-patch ;-)
+Did you just reload that web page only to be told you can't balance brackets to save your own testicles?
 
-This plugin is currently only recommended for *nix users. It is functional on
-Windows, but since the syntax checking plugins shell out, the command window
-briefly appears whenever one is executed.
+F#%K THAT!!
+
+Have you just wasted precious seconds of your life only to see gcc whinging about a missing semi colon?
+
+RAPING DAMN IT!!!1
+
+Syntastic can save you time by running your code through external syntax checkers to detect errors. It provides the following features:
+
+Errors can be loaded and displayed in a location list.
+A configurable statusline flag is available to display a summary of errors.
+Signs can be placed next to lines with errors or warnings.
+Offending parts of lines can be highlighted.
+Balloons are can be used to display error messages.
+Syntastic can be configured to be as intrusive or as passive as you want it to be - to the point where you invoke it manually.
+
+At the time of this writing, syntax checking plugins exist for c, coffee, cpp, css, cucumber, cuda, docbk, erlang, eruby, fortran, go, haml, haskell, html, javascript, less, lua, matlab, perl, php, puppet, python, ruby, sass/scss, sh, tcl, tex, vala, xhtml, xml, xslt, zpt.
 
