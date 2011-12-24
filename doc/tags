@@ -1,5 +1,6 @@
 'syntastic_auto_jump'	syntastic.txt	/*'syntastic_auto_jump'*
 'syntastic_auto_loc_list'	syntastic.txt	/*'syntastic_auto_loc_list'*
+'syntastic_check_on_open'	syntastic.txt	/*'syntastic_check_on_open'*
 'syntastic_echo_current_error'	syntastic.txt	/*'syntastic_echo_current_error'*
 'syntastic_enable_balloons'	syntastic.txt	/*'syntastic_enable_balloons'*
 'syntastic_enable_highlighting'	syntastic.txt	/*'syntastic_enable_highlighting'*
