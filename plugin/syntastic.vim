@@ -2,8 +2,8 @@
 "File:        syntastic.vim
 "Description: vim plugin for on the fly syntax checking
 "Maintainer:  Martin Grenfell <martin.grenfell at gmail dot com>
-"Version:     2.2.0
-"Last Change: 24 Dec, 2011
+"Version:     2.3.0
+"Last Change: 16 Feb, 2012
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -79,6 +79,10 @@ endif
 
 if !exists("g:syntastic_check_on_open")
     let g:syntastic_check_on_open = 0
+endif
+
+if !exists("g:syntastic_loc_list_height")
+    let g:syntastic_loc_list_height = 10
 endif
 
 command! SyntasticToggleMode call s:ToggleMode()
@@ -264,9 +268,11 @@ function! s:FilterLocList(filters, ...)
 endfunction
 
 if g:syntastic_enable_signs
-    "use >> to display syntax errors in the sign column
+    "define the signs used to display syntax and style errors/warns
     sign define SyntasticError text=>> texthl=error
     sign define SyntasticWarning text=>> texthl=todo
+    sign define SyntasticStyleError text=S> texthl=error
+    sign define SyntasticStyleWarning text=S> texthl=todo
 endif
 
 "start counting sign ids at 5000, start here to hopefully avoid conflicting
@@ -281,10 +287,15 @@ function! s:SignErrors()
 
         let errors = s:FilterLocList({'bufnr': bufnr('')})
         for i in errors
-            let sign_type = 'SyntasticError'
-            if i['type'] ==? 'W'
-                let sign_type = 'SyntasticWarning'
+            let sign_severity = 'Error'
+            let sign_subtype = ''
+            if has_key(i,'subtype')
+                let sign_subtype = i['subtype']
             endif
+            if i['type'] ==? 'w'
+                let sign_severity = 'Warning'
+            endif
+            let sign_type = 'Syntastic' . sign_subtype . sign_severity
 
             if !s:WarningMasksError(i, errors)
                 exec "sign place ". s:next_sign_id ." line=". i['lnum'] ." name=". sign_type ." file=". expand("%:p")
@@ -333,7 +344,7 @@ endfunction
 function! s:ShowLocList()
     if !empty(s:LocList())
         let num = winnr()
-        lopen
+        exec "lopen " . g:syntastic_loc_list_height
         if num != winnr()
             wincmd p
         endif
@@ -413,6 +424,12 @@ function! s:EchoCurrentError()
     endif
 endfunction
 
+"load the chosen checker for the current filetype - useful for filetypes like
+"javascript that have more than one syntax checker
+function! s:LoadChecker(checker)
+    exec "runtime syntax_checkers/" . &ft . "/" . a:checker . ".vim"
+endfunction
+
 "return a string representing the state of buffer according to
 "g:syntastic_stl_format
 "
@@ -466,6 +483,7 @@ endfunction
 "
 "a:options may also contain:
 "   'defaults' - a dict containing default values for the returned errors
+"   'subtype' - all errors will be assigned the given subtype
 function! SyntasticMake(options)
     let old_loclist = getloclist(0)
     let old_makeprg = &makeprg
@@ -503,6 +521,11 @@ function! SyntasticMake(options)
 
     if has_key(a:options, 'defaults')
         call SyntasticAddToErrors(errors, a:options['defaults'])
+    endif
+
+    " Add subtype info if present.
+    if has_key(a:options, 'subtype')
+        call SyntasticAddToErrors(errors, {'subtype': a:options['subtype']})
     endif
 
     return errors
@@ -551,12 +574,41 @@ endfunction
 function! SyntasticAddToErrors(errors, options)
     for i in range(0, len(a:errors)-1)
         for key in keys(a:options)
-            if empty(a:errors[i][key])
+            if !has_key(a:errors[i], key) || empty(a:errors[i][key])
                 let a:errors[i][key] = a:options[key]
             endif
         endfor
     endfor
     return a:errors
+endfunction
+
+"take a list of syntax checkers for the current filetype and load the right
+"one based on the global settings and checker executable availabity
+"
+"a:checkers should be a list of syntax checker names. These names are assumed
+"to be the names of the vim syntax checker files that should be sourced, as
+"well as the names of the actual syntax checker executables. The checkers
+"should be listed in order of default preference.
+"
+"if a option called 'g:syntastic_[filetype]_checker' exists then attempt to
+"load the checker that it points to
+function! SyntasticLoadChecker(checkers)
+    let opt_name = "g:syntastic_" . &ft . "_checker"
+
+    if exists(opt_name)
+        let opt_val = {opt_name}
+        if index(a:checkers, opt_val) != -1 && executable(opt_val)
+            call s:LoadChecker(opt_val)
+        else
+            echoerr &ft . " syntax not supported or not installed."
+        endif
+    else
+        for checker in a:checkers
+            if executable(checker)
+                return s:LoadChecker(checker)
+            endif
+        endfor
+    endif
 endfunction
 
 " vim: set et sts=4 sw=4:

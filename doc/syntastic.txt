@@ -203,6 +203,14 @@ detected, but not opened automatically. >
     let g:syntastic_auto_loc_list=2
 <
 
+                                                 *'syntastic_loc_list_height'*
+Default: 10
+Use this option to specify the height of the location lists that syntastic
+opens. >
+    let g:syntastic_loc_list_height=5
+<
+
+
                                                         *'syntastic_mode_map'*
 Default: { "mode": "active",
            "active_filetypes": [],
@@ -347,6 +355,36 @@ The latest dev versions are on github
 ==============================================================================
 7. Changelog                                             *syntastic-changelog*
 
+2.3.0
+    - Add syntastic_loc_list_height option
+    - Allow errors to have a "subtype" that is signed differently to standard
+      errors. Currently geared towards differentiating style errors from
+      syntax errors. Currently implemented for phpcs (technosophos).
+    - New checkers for:
+        - yaml
+        - haxe (davidB)
+        - ocaml (edwintorok)
+        - pylint (parantapa)
+        - rust (cjab)
+
+    - Updates to existing checkers:
+        - jslint
+        - jshint (gillesruppert)
+        - fortran (bmattern)
+        - sass
+        - html (darcyparker)
+        - coffee (darcyparker)
+        - docbk (darcyparker)
+        - xml
+        - xslt
+        - less (irrationalfab)
+        - php (AD7six, technosophos)
+        - cuda
+        - python (mitchellh, pneff)
+        - perl (Anthony Carapetis)
+        - c (naoina, zsprackett)
+        - puppet (frimik)
+
 2.2.0
     - only do syntax checks when files are saved (not when first opened) - add
       g:syntastic_check_on_open option to get the old behavior back
@@ -459,6 +497,19 @@ The latest dev versions are on github
 Thanks to the following people for testing, bug reports, patches etc. They own,
 hard.
 
+    Mikael Fridh (frimik)
+    Patrice Neff (pneff )
+    Gilles Ruppert (gillesruppert)
+    Naoya INADA (naoina)
+    Mitchell Hashimoto (mitchellh)
+    irrationalfab
+    Andy Dawson (AD7six)
+    Parantapa Bhattacharya (parantapa)
+    edwintorok
+    Darcy Parker (darcyparker)
+    bmattern
+    David Bernard (davidB)
+    Aleksey V. Zapparov (ixti)
     Benji Fisher (benjifisher)
     Lance Fetters (ashikase)
     datanoise

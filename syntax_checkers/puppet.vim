@@ -19,20 +19,36 @@ if !executable("puppet")
     finish
 endif
 
+function! s:ExtractVersion()
+    let output = system("puppet --version")
+    let output = substitute(output, '\n$', '', '')
+    return split(output, '\.')
+endfunction
+
+let s:puppetVersion = s:ExtractVersion()
+
 function! SyntaxCheckers_puppet_GetLocList()
-    let l:puppetVersion = system("puppet --version")
-    let l:digits = split(l:puppetVersion, "\\.")
-    "
-    " If it is on the 2.7 series... use new executable
-    if l:digits[0] == '2' && l:digits[1] == '7'
-      let makeprg = 'puppet parser validate ' . 
-            \ shellescape(expand('%')) .
-            \ ' --color=false --ignoreimport'
+    "If puppet is >= version 2.7 then use the new executable
+    if s:puppetVersion[0] >= '2' && s:puppetVersion[1] >= '7'
+        let makeprg = 'puppet parser validate ' .
+                    \ shellescape(expand('%')) .
+                    \ ' --color=false' .
+                    \ ' --storeconfigs'
+
+        "add --ignoreimport for versions < 2.7.10
+        if s:puppetVersion[2] < '10'
+            let makeprg .= ' --ignoreimport'
+        endif
+
     else
-      let makeprg = 'puppet --color=false --parseonly --ignoreimport '.shellescape(expand('%'))
+        let makeprg = 'puppet --color=false --parseonly --ignoreimport '.shellescape(expand('%'))
     endif
 
-    let errorformat = 'err: Could not parse for environment %*[a-z]: %m at %f:%l'
+    "some versions of puppet (e.g. 2.7.10) output the message below if there
+    "are any syntax errors
+    let errorformat = '%-Gerr: Try ''puppet help parser validate'' for usage,'
+
+    let errorformat .= 'err: Could not parse for environment %*[a-z]: %m at %f:%l'
 
     return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
 endfunction

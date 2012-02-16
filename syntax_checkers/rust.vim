@@ -1,7 +1,7 @@
 "============================================================================
-"File:        coffee.vim
+"File:        rust.vim
 "Description: Syntax checking plugin for syntastic.vim
-"Maintainer:  Lincoln Stoll <l@lds.li>
+"Maintainer:  Chad Jablonski <chad.jablonski at gmail dot com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -9,19 +9,25 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 "============================================================================
-if exists("loaded_coffee_syntax_checker")
+if exists("loaded_rust_syntax_checker")
     finish
 endif
-let loaded_coffee_syntax_checker = 1
+let loaded_rust_syntax_checker = 1
 
-"bail if the user doesnt have coffee installed
-if !executable("coffee")
+"bail if the user doesnt have rustc installed
+if !executable("rustc")
     finish
 endif
 
-function! SyntaxCheckers_coffee_GetLocList()
-    let makeprg = 'coffee -c -l -o /tmp '.shellescape(expand('%'))
-    let errorformat =  'Syntax%trror: In %f\, %m on line %l,%EError: In %f\, Parse error on line %l: %m,%EError: In %f\, %m on line %l,%W%f(%l): lint warning: %m,%-Z%p^,%W%f(%l): warning: %m,%-Z%p^,%E%f(%l): SyntaxError: %m,%-Z%p^,%-G%.%#'
+function! SyntaxCheckers_rust_GetLocList()
+    let makeprg = 'rustc --parse-only '.shellescape(expand('%'))
+
+    let errorformat  = '%E%f:%l:%c: \\d%#:\\d%# %.%\{-}error:%.%\{-} %m,'   .
+                     \ '%W%f:%l:%c: \\d%#:\\d%# %.%\{-}warning:%.%\{-} %m,' .
+                     \ '%C%f:%l %m,' .
+                     \ '%-Z%.%#'
 
     return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat })
 endfunction
+
+
