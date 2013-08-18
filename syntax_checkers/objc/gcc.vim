@@ -90,7 +90,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 if !exists('g:syntastic_objc_compiler_options')
-    let g:syntastic_objc_compiler_options = ''
+    let g:syntastic_objc_compiler_options = '-std=gnu99'
 endif
 
 if !exists('g:syntastic_objc_config_file')
@@ -100,13 +100,17 @@ endif
 function! SyntaxCheckers_objc_gcc_GetLocList()
     let makeprg = g:syntastic_objc_compiler . ' -x objective-c -fsyntax-only -lobjc'
     let errorformat =
-                    \ '%-G%f:%s:,' .
-                    \ '%f:%l:%c: %trror: %m,' .
-                    \ '%f:%l:%c: %tarning: %m,' .
-                    \ '%f:%l:%c: %m,' .
-                    \ '%f:%l: %trror: %m,' .
-                    \ '%f:%l: %tarning: %m,' .
-                    \ '%f:%l: %m'
+        \ '%-G%f:%s:,' .
+        \ '%-G%f:%l: %#error: %#(Each undeclared identifier is reported only%.%#,' .
+        \ '%-G%f:%l: %#error: %#for each function it appears%.%#,' .
+        \ '%-GIn file included%.%#,'.
+        \ '%-G %#from %f:%l\,,' .
+        \ '%f:%l:%c: %trror: %m,' .
+        \ '%f:%l:%c: %tarning: %m,' .
+        \ '%f:%l:%c: %m,' .
+        \ '%f:%l: %trror: %m,' .
+        \ '%f:%l: %tarning: %m,' .
+        \ '%f:%l: %m'
 
     if exists('g:syntastic_objc_errorformat')
         let errorformat = g:syntastic_objc_errorformat
@@ -115,15 +119,15 @@ function! SyntaxCheckers_objc_gcc_GetLocList()
     " add optional user-defined compiler options
     let makeprg .= g:syntastic_objc_compiler_options
 
-    let makeprg .= ' ' . shellescape(expand('%')) .
+    let makeprg .= ' ' . syntastic#util#shexpand('%') .
                \ ' ' . syntastic#c#GetIncludeDirs('objc')
 
     " determine whether to parse header files as well
     if expand('%') =~? '\.h$'
         if exists('g:syntastic_objc_check_header')
-            let makeprg = g:syntastic_c_compiler .
+            let makeprg = g:syntastic_objc_compiler .
                         \ ' -x objective-c-header ' .
-                        \ ' -c ' . shellescape(expand('%')) .
+                        \ ' -c ' . syntastic#util#shexpand('%') .
                         \ ' ' . g:syntastic_objc_compiler_options .
                         \ ' ' . syntastic#c#GetIncludeDirs('objc')
         else

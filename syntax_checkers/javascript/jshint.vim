@@ -9,35 +9,43 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "============================================================================
 
-if exists("g:loaded_syntastic_javascript_jshint_checker")
+if exists('g:loaded_syntastic_javascript_jshint_checker')
     finish
 endif
 let g:loaded_syntastic_javascript_jshint_checker=1
 
-if !exists("g:syntastic_javascript_jshint_conf")
-    let g:syntastic_javascript_jshint_conf = ""
+if !exists('g:syntastic_jshint_exec')
+    let g:syntastic_jshint_exec = 'jshint'
+endif
+
+if !exists('g:syntastic_javascript_jshint_conf')
+    let g:syntastic_javascript_jshint_conf = ''
 endif
 
 function! SyntaxCheckers_javascript_jshint_IsAvailable()
-    return executable('jshint')
+    return executable(expand(g:syntastic_jshint_exec))
 endfunction
 
 function! SyntaxCheckers_javascript_jshint_GetLocList()
     let jshint_new = s:JshintNew()
     let makeprg = syntastic#makeprg#build({
-                \ 'exe': 'jshint',
-                \ 'post_args': (jshint_new ? ' --verbose ' : '') . s:Args(),
-                \ 'subchecker': 'jshint' })
+        \ 'exe': expand(g:syntastic_jshint_exec),
+        \ 'post_args': (jshint_new ? ' --verbose ' : '') . s:Args(),
+        \ 'filetype': 'javascript',
+        \ 'subchecker': 'jshint' })
 
     let errorformat = jshint_new ?
-                \ '%f: line %l\, col %c\, %m \(%t%*\d\)' :
-                \ '%E%f: line %l\, col %c\, %m'
-    return SyntasticMake({ 'makeprg': makeprg, 'errorformat': errorformat, 'defaults': {'bufnr': bufnr('')} })
+        \ '%f: line %l\, col %c\, %m \(%t%*\d\)' :
+        \ '%E%f: line %l\, col %c\, %m'
+
+    return SyntasticMake({
+        \ 'makeprg': makeprg,
+        \ 'errorformat': errorformat,
+        \ 'defaults': {'bufnr': bufnr('')} })
 endfunction
 
 function s:JshintNew()
-    let ver = matchlist(system('jshint --version'), '^\D*\(\d\+\)\.\(\d\+\)')
-    return (ver[1] > 1 || (ver[1] == 1 && ver[2] >= 1))
+    return syntastic#util#versionIsAtLeast(syntastic#util#parseVersion(expand(g:syntastic_jshint_exec) . ' --version'), [1, 1])
 endfunction
 
 function s:Args()
