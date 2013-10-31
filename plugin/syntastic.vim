@@ -95,7 +95,7 @@ highlight link SyntasticWarning SpellCap
 
 augroup syntastic
     autocmd BufReadPost * if g:syntastic_check_on_open | call s:UpdateErrors(1) | endif
-    autocmd BufWritePost * call s:UpdateErrors(1)
+    autocmd BufWritePost * if g:syntastic_check_on_wq | call s:UpdateErrors(1) | endif
 
     autocmd BufWinEnter * call s:BufWinEnterHook()
 
