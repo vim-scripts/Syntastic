@@ -1,38 +1,39 @@
 "============================================================================
-"File:        llvm.vim
-"Description: Syntax checking plugin for syntastic.vim
-"Maintainer:  Andrew Kelley <superjoe30@gmail.com>
+"File:        scss_lint.vim
+"Description: SCSS style and syntax checker plugin for Syntastic
+"Maintainer:  Shane da Silva <shane@dasilva.io>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
 "             Want To Public License, Version 2, as published by Sam Hocevar.
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
-"
 "============================================================================
-if exists("g:loaded_syntastic_llvm_llvm_checker")
+
+if exists("g:loaded_syntastic_scss_scss_lint_checker")
     finish
 endif
-let g:loaded_syntastic_llvm_llvm_checker=1
+let g:loaded_syntastic_scss_scss_lint_checker=1
 
-function! SyntaxCheckers_llvm_llvm_IsAvailable()
-    return executable("llc")
+function! SyntaxCheckers_scss_scss_lint_IsAvailable()
+    return executable('scss-lint')
 endfunction
 
-function! SyntaxCheckers_llvm_llvm_GetLocList()
+function! SyntaxCheckers_scss_scss_lint_GetLocList()
     let makeprg = syntastic#makeprg#build({
-        \ 'exe': 'llc',
-        \ 'args': syntastic#c#NullOutput(),
-        \ 'filetype': 'llvm',
-        \ 'subchecker': 'llvm' })
+        \ 'exe': 'scss-lint',
+        \ 'filetype': 'scss',
+        \ 'subchecker': 'scss_lint' })
 
-    let errorformat = 'llc: %f:%l:%c: %trror: %m'
+    let errorformat = '%f:%l [%t] %m'
 
-    return SyntasticMake({
+    let loclist = SyntasticMake({
         \ 'makeprg': makeprg,
-        \ 'errorformat': errorformat })
+        \ 'errorformat': errorformat,
+        \ 'subtype': 'Style'})
+
+    return loclist
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'llvm',
-    \ 'name': 'llvm'})
-
+    \ 'filetype': 'scss',
+    \ 'name': 'scss_lint'})

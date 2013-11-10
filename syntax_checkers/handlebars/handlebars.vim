@@ -1,5 +1,5 @@
 "============================================================================
-"File:        yaml.vim
+"File:        handlebars.vim
 "Description: Syntax checking plugin for syntastic.vim
 "Maintainer:  Martin Grenfell <martin.grenfell at gmail dot com>
 "License:     This program is free software. It comes without any warranty,
@@ -7,35 +7,27 @@
 "             it and/or modify it under the terms of the Do What The Fuck You
 "             Want To Public License, Version 2, as published by Sam Hocevar.
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
-"
-"
-"Installation: $ npm install -g js-yaml
-"
 "============================================================================
-
-if exists("g:loaded_syntastic_yaml_jsyaml_checker")
+if exists("g:loaded_syntastic_handlebars_handlebars_checker")
     finish
 endif
-let g:loaded_syntastic_yaml_jsyaml_checker=1
+let g:loaded_syntastic_handlebars_handlebars_checker=1
 
-function! SyntaxCheckers_yaml_jsyaml_IsAvailable()
-    return executable("js-yaml")
+function! SyntaxCheckers_handlebars_handlebars_IsAvailable()
+    return executable('handlebars')
 endfunction
 
-function! SyntaxCheckers_yaml_jsyaml_GetLocList()
-    if !exists('s:js_yaml_new')
-        let s:js_yaml_new = syntastic#util#versionIsAtLeast(syntastic#util#getVersion('js-yaml --version'), [2])
-    endif
-
+function! SyntaxCheckers_handlebars_handlebars_GetLocList()
     let makeprg = syntastic#makeprg#build({
-        \ 'exe': 'js-yaml',
-        \ 'args': s:js_yaml_new ? '' : '--compact',
-        \ 'filetype': 'yaml',
-        \ 'subchecker': 'jsyaml' })
+        \ 'exe': 'handlebars',
+        \ 'args': '-f ' . syntastic#util#DevNull(),
+        \ 'filetype': 'handlebars',
+        \ 'subchecker': 'handlebars' })
 
     let errorformat =
-        \ 'Error on line %l\, col %c:%m,' .
-        \ 'JS-YAML: %m at line %l\, column %c:,' .
+        \ '%EError: %m on line %l:,'.
+        \ "%EError: %m,".
+        \ '%Z%p^,' .
         \ '%-G%.%#'
 
     return SyntasticMake({
@@ -45,5 +37,5 @@ function! SyntaxCheckers_yaml_jsyaml_GetLocList()
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'yaml',
-    \ 'name': 'jsyaml'})
+    \ 'filetype': 'handlebars',
+    \ 'name': 'handlebars'})

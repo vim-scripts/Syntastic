@@ -23,10 +23,12 @@ function! SyntaxCheckers_javascript_jslint_IsAvailable()
     return executable('jslint')
 endfunction
 
-function! SyntaxCheckers_javascript_jslint_HighlightTerm(error)
-    let unexpected = matchstr(a:error['text'], 'Expected.*and instead saw \'\zs.*\ze\'')
-    if len(unexpected) < 1 | return '' | end
-    return '\V'.split(unexpected, "'")[1]
+function! SyntaxCheckers_javascript_jslint_GetHighlightRegex(item)
+    let term = matchstr(a:item['text'], '\mExpected .* and instead saw ''\zs.*\ze''')
+    if term != ''
+        let term = '\V' . term
+    endif
+    return term
 endfunction
 
 function! SyntaxCheckers_javascript_jslint_GetLocList()

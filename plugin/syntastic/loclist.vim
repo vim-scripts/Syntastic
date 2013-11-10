@@ -69,6 +69,12 @@ function! g:SyntasticLoclist.setName(name)
     let self._name = a:name
 endfunction
 
+function! g:SyntasticLoclist.decorate(name, filetype)
+    for e in self._rawLoclist
+        let e['text'] .= ' [' . a:filetype . '/' . a:name . ']'
+    endfor
+endfunction
+
 function! g:SyntasticLoclist.hasErrorsOrWarningsToDisplay()
     if self._hasErrorsOrWarningsToDisplay >= 0
         return self._hasErrorsOrWarningsToDisplay
@@ -151,7 +157,7 @@ function! g:SyntasticLoclist.show()
 
     if self.hasErrorsOrWarningsToDisplay()
         let num = winnr()
-        exec "lopen " . g:syntastic_loc_list_height
+        execute "lopen " . g:syntastic_loc_list_height
         if num != winnr()
             wincmd p
         endif

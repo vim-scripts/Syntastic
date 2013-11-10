@@ -1,7 +1,7 @@
 "============================================================================
-"File:        llvm.vim
-"Description: Syntax checking plugin for syntastic.vim
-"Maintainer:  Andrew Kelley <superjoe30@gmail.com>
+"File:        rubylint.vim
+"Description: Checks Ruby source code using ruby-lint
+"Maintainer:  Yorick Peterse <yorickpeterse@gmail.com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
@@ -9,23 +9,25 @@
 "             See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 "============================================================================
-if exists("g:loaded_syntastic_llvm_llvm_checker")
+
+if exists("g:loaded_syntastic_ruby_rubylint_checker")
     finish
 endif
-let g:loaded_syntastic_llvm_llvm_checker=1
 
-function! SyntaxCheckers_llvm_llvm_IsAvailable()
-    return executable("llc")
+let g:loaded_syntastic_ruby_rubylint_checker = 1
+
+function! SyntaxCheckers_ruby_rubylint_IsAvailable()
+    return executable("ruby-lint")
 endfunction
 
-function! SyntaxCheckers_llvm_llvm_GetLocList()
+function! SyntaxCheckers_ruby_rubylint_GetLocList()
     let makeprg = syntastic#makeprg#build({
-        \ 'exe': 'llc',
-        \ 'args': syntastic#c#NullOutput(),
-        \ 'filetype': 'llvm',
-        \ 'subchecker': 'llvm' })
+        \ 'exe': 'ruby-lint',
+        \ 'args': 'analyze --presenter=syntastic',
+        \ 'filetype': 'ruby',
+        \ 'subchecker': 'rubylint' })
 
-    let errorformat = 'llc: %f:%l:%c: %trror: %m'
+    let errorformat = '%f:%t:%l:%c: %m'
 
     return SyntasticMake({
         \ 'makeprg': makeprg,
@@ -33,6 +35,7 @@ function! SyntaxCheckers_llvm_llvm_GetLocList()
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
-    \ 'filetype': 'llvm',
-    \ 'name': 'llvm'})
+    \ 'filetype': 'ruby',
+    \ 'name': 'rubylint' })
 
+" vim: set ts=4 sts=4 sw=4:
