@@ -11,7 +11,7 @@ set cpo&vim
 " convenience function to determine the 'null device' parameter
 " based on the current operating system
 function! syntastic#c#NullOutput()
-    let known_os = has('win32') || has('unix') || has('mac')
+    let known_os = has('unix') || has('mac') || syntastic#util#isRunningWindows()
     return known_os ? '-o ' . syntastic#util#DevNull() : ''
 endfunction
 
@@ -56,7 +56,7 @@ function! syntastic#c#ReadConfig(file)
         endif
     endfor
 
-    return join(map(parameters, 'syntastic#util#shescape(fnameescape(v:val))'), ' ')
+    return join(map(parameters, 'syntastic#util#shescape(fnameescape(v:val))'))
 endfunction
 
 " GetLocList() for C-like compilers
@@ -67,7 +67,7 @@ function! syntastic#c#GetLocList(filetype, subchecker, options)
         return []
     endtry
 
-    let makeprg = g:syntastic_{a:filetype}_compiler . ' ' . flags . ' ' . syntastic#util#shexpand('%')
+    let makeprg = expand(g:syntastic_{a:filetype}_compiler) . ' ' . flags . ' ' . syntastic#util#shexpand('%')
 
     let errorformat = s:GetCheckerVar('g', a:filetype, a:subchecker, 'errorformat', a:options['errorformat'])
 
@@ -178,7 +178,7 @@ function! s:GetIncludeDirs(filetype)
         call extend(include_dirs, g:syntastic_{a:filetype}_include_dirs)
     endif
 
-    return join(map(syntastic#util#unique(include_dirs), 'syntastic#util#shescape(fnameescape("-I" . v:val))'), ' ')
+    return join(map(syntastic#util#unique(include_dirs), 'syntastic#util#shescape(fnameescape("-I" . v:val))'))
 endfunction
 
 " search the first 100 lines for include statements that are

@@ -13,15 +13,11 @@
 if exists("g:loaded_syntastic_javascript_jslint_checker")
     finish
 endif
-let g:loaded_syntastic_javascript_jslint_checker=1
 
-if !exists("g:syntastic_javascript_jslint_conf")
-    let g:syntastic_javascript_jslint_conf = "--white --undef --nomen --regexp --plusplus --bitwise --newcap --sloppy --vars"
-endif
+let g:loaded_syntastic_javascript_jslint_checker = 1
 
-function! SyntaxCheckers_javascript_jslint_IsAvailable()
-    return executable('jslint')
-endfunction
+let s:save_cpo = &cpo
+set cpo&vim
 
 function! SyntaxCheckers_javascript_jslint_GetHighlightRegex(item)
     let term = matchstr(a:item['text'], '\mExpected .* and instead saw ''\zs.*\ze''')
@@ -31,15 +27,11 @@ function! SyntaxCheckers_javascript_jslint_GetHighlightRegex(item)
     return term
 endfunction
 
-function! SyntaxCheckers_javascript_jslint_GetLocList()
-    let makeprg = syntastic#makeprg#build({
-        \ 'exe': 'jslint',
-        \ 'args': g:syntastic_javascript_jslint_conf,
-        \ 'filetype': 'javascript',
-        \ 'subchecker': 'jslint' })
+function! SyntaxCheckers_javascript_jslint_GetLocList() dict
+    let makeprg = self.makeprgBuild({ 'args': '--white --nomen --regexp --plusplus --bitwise --newcap --sloppy --vars' })
 
     let errorformat =
-        \ '%E %##%n %m,'.
+        \ '%E %##%\d%\+ %m,'.
         \ '%-Z%.%#Line %l\, Pos %c,'.
         \ '%-G%.%#'
 
@@ -53,3 +45,7 @@ call g:SyntasticRegistry.CreateAndRegisterChecker({
     \ 'filetype': 'javascript',
     \ 'name': 'jslint'})
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
+
+" vim: set et sts=4 sw=4:

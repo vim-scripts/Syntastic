@@ -51,16 +51,18 @@
 if exists("g:loaded_syntastic_ocaml_camlp4o_checker")
     finish
 endif
-let g:loaded_syntastic_ocaml_camlp4o_checker=1
+let g:loaded_syntastic_ocaml_camlp4o_checker = 1
 
-if exists('g:syntastic_ocaml_camlp4r') &&
-    \ g:syntastic_ocaml_camlp4r != 0
+if exists('g:syntastic_ocaml_camlp4r') && g:syntastic_ocaml_camlp4r != 0
     let s:ocamlpp="camlp4r"
 else
     let s:ocamlpp="camlp4o"
 endif
 
-function! SyntaxCheckers_ocaml_camlp4o_IsAvailable()
+let s:save_cpo = &cpo
+set cpo&vim
+
+function! SyntaxCheckers_ocaml_camlp4o_IsAvailable() dict
     return executable(s:ocamlpp)
 endfunction
 
@@ -76,7 +78,7 @@ if !exists('g:syntastic_ocaml_use_ocamlbuild') || !executable("ocamlbuild")
     let g:syntastic_ocaml_use_ocamlbuild = 0
 endif
 
-function! SyntaxCheckers_ocaml_camlp4o_GetLocList()
+function! SyntaxCheckers_ocaml_camlp4o_GetLocList() dict
     let makeprg = s:GetMakeprg()
     if makeprg == ""
         return []
@@ -132,10 +134,10 @@ function! s:GetOtherMakeprg()
     let extension = expand('%:e')
     let makeprg = ""
 
-    if match(extension, 'mly') >= 0 && executable("menhir")
+    if stridx(extension, 'mly') >= 0 && executable("menhir")
         " ocamlyacc output can't be redirected, so use menhir
         let makeprg = "menhir --only-preprocess " . syntastic#util#shexpand('%') . " >" . syntastic#util#DevNull()
-    elseif match(extension,'mll') >= 0 && executable("ocamllex")
+    elseif stridx(extension,'mll') >= 0 && executable("ocamllex")
         let makeprg = "ocamllex -q " . syntastic#c#NullOutput() . " " . syntastic#util#shexpand('%')
     else
         let makeprg = "camlp4o " . syntastic#c#NullOutput() . " " . syntastic#util#shexpand('%')
@@ -147,3 +149,8 @@ endfunction
 call g:SyntasticRegistry.CreateAndRegisterChecker({
     \ 'filetype': 'ocaml',
     \ 'name': 'camlp4o'})
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
+
+" vim: set et sts=4 sw=4:
