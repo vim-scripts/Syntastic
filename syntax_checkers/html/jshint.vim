@@ -34,15 +34,16 @@ endfunction
 function! SyntaxCheckers_html_jshint_GetLocList() dict
     let makeprg = self.makeprgBuild({
         \ 'exe': expand(g:syntastic_jshint_exec),
-        \ 'post_args': '--verbose --extract always' .
-        \       (!empty(g:syntastic_html_jshint_conf) ? ' --config ' . g:syntastic_html_jshint_conf : '') })
+        \ 'args': (g:syntastic_html_jshint_conf != '' ? '--config ' . g:syntastic_html_jshint_conf : ''),
+        \ 'args_after': '--verbose --extract always' })
 
     let errorformat = '%A%f: line %l\, col %v\, %m \(%t%*\d\)'
 
     return SyntasticMake({
         \ 'makeprg': makeprg,
         \ 'errorformat': errorformat,
-        \ 'defaults': {'bufnr': bufnr('')} })
+        \ 'defaults': {'bufnr': bufnr('')},
+        \ 'returns': [0, 2] })
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({

@@ -1,4 +1,4 @@
-if exists('g:loaded_syntastic_util_autoload')
+if exists('g:loaded_syntastic_util_autoload') || !exists("g:loaded_syntastic_plugin")
     finish
 endif
 let g:loaded_syntastic_util_autoload = 1
@@ -6,47 +6,23 @@ let g:loaded_syntastic_util_autoload = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-if !exists('g:syntastic_delayed_redraws')
-    let g:syntastic_delayed_redraws = 0
-endif
-
-" strwidth() was added in Vim 7.3; if it doesn't exist, we use strlen()
-" and hope for the best :)
-let s:width = function(exists('*strwidth') ? 'strwidth' : 'strlen')
-
-let s:redraw_delayed = 0
-let s:redraw_full = 0
-
-if g:syntastic_delayed_redraws
-    " CursorHold / CursorHoldI events are triggered if user doesn't press a
-    " key for &updatetime ms.  We change it only if current value is the default
-    " value, that is 4000 ms.
-    if &updatetime == 4000
-        let &updatetime = 500
-    endif
-
-    augroup syntastic
-        autocmd CursorHold,CursorHoldI * call syntastic#util#redrawHandler()
-    augroup END
-endif
-
 " Public functions {{{1
 
-function! syntastic#util#isRunningWindows()
+function! syntastic#util#isRunningWindows() " {{{2
     return has('win16') || has('win32') || has('win64')
-endfunction
+endfunction " }}}2
 
-function! syntastic#util#DevNull()
+function! syntastic#util#DevNull() " {{{2
     if syntastic#util#isRunningWindows()
         return 'NUL'
     endif
     return '/dev/null'
-endfunction
+endfunction " }}}2
 
 " Get directory separator
-function! syntastic#util#Slash() abort
-    return !exists("+shellslash") || &shellslash ? '/' : '\'
-endfunction
+function! syntastic#util#Slash() abort " {{{2
+    return (!exists("+shellslash") || &shellslash) ? '/' : '\'
+endfunction " }}}2
 
 "search the first 5 lines of the file for a magic number and return a map
 "containing the args and the executable
@@ -58,30 +34,38 @@ endfunction
 "returns
 "
 "{'exe': '/usr/bin/perl', 'args': ['-f', '-bar']}
-function! syntastic#util#parseShebang()
+function! syntastic#util#parseShebang() " {{{2
     for lnum in range(1,5)
         let line = getline(lnum)
 
         if line =~ '^#!'
             let exe = matchstr(line, '\m^#!\s*\zs[^ \t]*')
             let args = split(matchstr(line, '\m^#!\s*[^ \t]*\zs.*'))
-            return {'exe': exe, 'args': args}
+            return { 'exe': exe, 'args': args }
         endif
     endfor
 
-    return {'exe': '', 'args': []}
-endfunction
+    return { 'exe': '', 'args': [] }
+endfunction " }}}2
+
+" Get the value of a variable.  Allow local variables to override global ones.
+function! syntastic#util#var(name, ...) " {{{2
+    return
+        \ exists('b:syntastic_' . a:name) ? b:syntastic_{a:name} :
+        \ exists('g:syntastic_' . a:name) ? g:syntastic_{a:name} :
+        \ a:0 > 0 ? a:1 : ''
+endfunction " }}}2
 
 " Parse a version string.  Return an array of version components.
-function! syntastic#util#parseVersion(version)
+function! syntastic#util#parseVersion(version) " {{{2
     return split(matchstr( a:version, '\v^\D*\zs\d+(\.\d+)+\ze' ), '\m\.')
-endfunction
+endfunction " }}}2
 
 " Run 'command' in a shell and parse output as a version string.
 " Returns an array of version components.
-function! syntastic#util#getVersion(command)
+function! syntastic#util#getVersion(command) " {{{2
     return syntastic#util#parseVersion(system(a:command))
-endfunction
+endfunction " }}}2
 
 " Verify that the 'installed' version is at least the 'required' version.
 "
@@ -89,28 +73,24 @@ endfunction
 " the "missing" elements will be assumed to be 0 for the purposes of checking.
 "
 " See http://semver.org for info about version numbers.
-function! syntastic#util#versionIsAtLeast(installed, required)
-    for index in range(max([len(a:installed), len(a:required)]))
-        if len(a:installed) <= index
-            let installed_element = 0
-        else
-            let installed_element = a:installed[index]
-        endif
-        if len(a:required) <= index
-            let required_element = 0
-        else
-            let required_element = a:required[index]
-        endif
+function! syntastic#util#versionIsAtLeast(installed, required) " {{{2
+    for idx in range(max([len(a:installed), len(a:required)]))
+        let installed_element = get(a:installed, idx, 0)
+        let required_element = get(a:required, idx, 0)
         if installed_element != required_element
             return installed_element > required_element
         endif
     endfor
     " Everything matched, so it is at least the required version.
     return 1
-endfunction
+endfunction " }}}2
+
+" strwidth() was added in Vim 7.3; if it doesn't exist, we use strlen()
+" and hope for the best :)
+let s:width = function(exists('*strwidth') ? 'strwidth' : 'strlen')
 
 "print as much of a:msg as possible without "Press Enter" prompt appearing
-function! syntastic#util#wideMsg(msg)
+function! syntastic#util#wideMsg(msg) " {{{2
     let old_ruler = &ruler
     let old_showcmd = &showcmd
 
@@ -122,7 +102,7 @@ function! syntastic#util#wideMsg(msg)
     "width as the proper amount of characters
     let chunks = split(msg, "\t", 1)
     let msg = join(map(chunks[:-2], 'v:val . repeat(" ", &ts - s:width(v:val) % &ts)'), '') . chunks[-1]
-    let msg = strpart(msg, 0, winwidth(0) - 1)
+    let msg = strpart(msg, 0, &columns - 1)
 
     set noruler noshowcmd
     call syntastic#util#redraw(0)
@@ -131,10 +111,10 @@ function! syntastic#util#wideMsg(msg)
 
     let &ruler = old_ruler
     let &showcmd = old_showcmd
-endfunction
+endfunction " }}}2
 
 " Check whether a buffer is loaded, listed, and not hidden
-function! syntastic#util#bufIsActive(buffer)
+function! syntastic#util#bufIsActive(buffer) " {{{2
     " convert to number, or hell breaks loose
     let buf = str2nr(a:buffer)
 
@@ -150,11 +130,11 @@ function! syntastic#util#bufIsActive(buffer)
     endfor
 
     return 0
-endfunction
+endfunction " }}}2
 
 " start in directory a:where and walk up the parent folders until it
 " finds a file matching a:what; return path to that file
-function! syntastic#util#findInParent(what, where)
+function! syntastic#util#findInParent(what, where) " {{{2
     let here = fnamemodify(a:where, ':p')
 
     let root = syntastic#util#Slash()
@@ -165,14 +145,17 @@ function! syntastic#util#findInParent(what, where)
         let root = here[0] . root[1:]
     endif
 
-    while !empty(here)
+    let old = ''
+    while here != ''
         let p = split(globpath(here, a:what), '\n')
 
         if !empty(p)
             return fnamemodify(p[0], ':p')
-        elseif here ==? root
+        elseif here ==? root || here ==? old
             break
         endif
+
+        let old = here
 
         " we use ':h:h' rather than ':h' since ':p' adds a trailing '/'
         " if 'here' is a directory
@@ -180,10 +163,10 @@ function! syntastic#util#findInParent(what, where)
     endwhile
 
     return ''
-endfunction
+endfunction " }}}2
 
 " Returns unique elements in a list
-function! syntastic#util#unique(list)
+function! syntastic#util#unique(list) " {{{2
     let seen = {}
     let uniques = []
     for e in a:list
@@ -193,20 +176,20 @@ function! syntastic#util#unique(list)
         endif
     endfor
     return uniques
-endfunction
+endfunction " }}}2
 
 " A less noisy shellescape()
-function! syntastic#util#shescape(string)
+function! syntastic#util#shescape(string) " {{{2
     return a:string =~ '\m^[A-Za-z0-9_/.-]\+$' ? a:string : shellescape(a:string)
-endfunction
+endfunction " }}}2
 
 " A less noisy shellescape(expand())
-function! syntastic#util#shexpand(string)
+function! syntastic#util#shexpand(string) " {{{2
     return syntastic#util#shescape(expand(a:string))
-endfunction
+endfunction " }}}2
 
 " decode XML entities
-function! syntastic#util#decodeXMLEntities(string)
+function! syntastic#util#decodeXMLEntities(string) " {{{2
     let str = a:string
     let str = substitute(str, '\m&lt;', '<', 'g')
     let str = substitute(str, '\m&gt;', '>', 'g')
@@ -214,30 +197,17 @@ function! syntastic#util#decodeXMLEntities(string)
     let str = substitute(str, '\m&apos;', "'", 'g')
     let str = substitute(str, '\m&amp;', '\&', 'g')
     return str
-endfunction
+endfunction " }}}2
 
-" On older Vim versions calling redraw while a popup is visible can make
-" Vim segfault, so move redraws to a CursorHold / CursorHoldI handler.
-function! syntastic#util#redraw(full)
-    if !g:syntastic_delayed_redraws || !pumvisible()
-        call s:doRedraw(a:full)
-        let s:redraw_delayed = 0
-        let s:redraw_full = 0
+function! syntastic#util#redraw(full) " {{{2
+    if a:full
+        redraw!
     else
-        let s:redraw_delayed = 1
-        let s:redraw_full = s:redraw_full || a:full
+        redraw
     endif
-endfunction
+endfunction " }}}2
 
-function! syntastic#util#redrawHandler()
-    if s:redraw_delayed && !pumvisible()
-        call s:doRedraw(s:redraw_full)
-        let s:redraw_delayed = 0
-        let s:redraw_full = 0
-    endif
-endfunction
-
-function! syntastic#util#dictFilter(errors, filter)
+function! syntastic#util#dictFilter(errors, filter) " {{{2
     let rules = s:translateFilter(a:filter)
     " call syntastic#log#debug(g:SyntasticDebugFilters, "applying filter:", rules)
     try
@@ -246,38 +216,29 @@ function! syntastic#util#dictFilter(errors, filter)
         let msg = matchstr(v:exception, '\m^Vim\%((\a\+)\)\=:\zs.*')
         call syntastic#log#error('quiet_messages: ' . msg)
     endtry
-endfunction
+endfunction " }}}2
+
+" }}}1
 
 " Private functions {{{1
 
-"Redraw in a way that doesnt make the screen flicker or leave anomalies behind.
-"
-"Some terminal versions of vim require `redraw!` - otherwise there can be
-"random anomalies left behind.
-"
-"However, on some versions of gvim using `redraw!` causes the screen to
-"flicker - so use redraw.
-function! s:doRedraw(full)
-    if a:full
-        redraw!
-    else
-        redraw
-    endif
-endfunction
-
-function! s:translateFilter(filters)
+function! s:translateFilter(filters) " {{{2
     let conditions = []
-    for [k, v] in items(a:filters)
-        if type(v) == type([])
-            call extend(conditions, map(copy(v), 's:translateElement(k, v:val)'))
+    for k in keys(a:filters)
+        if type(a:filters[k]) == type([])
+            call extend(conditions, map(copy(a:filters[k]), 's:translateElement(k, v:val)'))
         else
-            call add(conditions, s:translateElement(k, v))
+            call add(conditions, s:translateElement(k, a:filters[k]))
         endif
     endfor
-    return len(conditions) == 1 ? conditions[0] : join(map(conditions, '"(" . v:val . ")"'), ' && ')
-endfunction
 
-function! s:translateElement(key, term)
+    if conditions == []
+        let conditions = ["1"]
+    endif
+    return len(conditions) == 1 ? conditions[0] : join(map(conditions, '"(" . v:val . ")"'), ' && ')
+endfunction " }}}2
+
+function! s:translateElement(key, term) " {{{2
     if a:key ==? 'level'
         let ret = 'v:val["type"] !=? ' . string(a:term[0])
     elseif a:key ==? 'type'
@@ -286,10 +247,16 @@ function! s:translateElement(key, term)
         let ret = 'v:val["text"] !~? ' . string(a:term)
     elseif a:key ==? 'file'
         let ret = 'bufname(str2nr(v:val["bufnr"])) !~# ' . string(a:term)
+    else
+        call syntastic#log#warn('quiet_messages: ignoring invalid key ' . strtrans(string(a:key)))
+        let ret = "1"
     endif
     return ret
-endfunction
+endfunction " }}}2
+
+" }}}1
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
-" vim: set et sts=4 sw=4 fdm=marker:
+
+" vim: set sw=4 sts=4 et fdm=marker:

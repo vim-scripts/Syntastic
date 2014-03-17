@@ -22,7 +22,7 @@ function! s:GetShell()
     if !exists('b:shell') || b:shell == ''
         let b:shell = ''
         let shebang = getbufline(bufnr('%'), 1)[0]
-        if strlen(shebang) > 0
+        if shebang != ''
             if stridx(shebang, 'bash') >= 0
                 let b:shell = 'bash'
             elseif stridx(shebang, 'zsh') >= 0
@@ -41,12 +41,11 @@ endfunction
 
 function! s:ForwardToZshChecker()
     let registry = g:SyntasticRegistry.Instance()
-    if registry.checkable('zsh')
+    if registry.isCheckable('zsh')
         return registry.getCheckers('zsh', ['zsh'])[0].getLocListRaw()
     else
         return []
     endif
-
 endfunction
 
 function! s:IsShellValid()
@@ -69,7 +68,7 @@ function! SyntaxCheckers_sh_sh_GetLocList() dict
 
     let makeprg = self.makeprgBuild({
         \ 'exe': s:GetShell(),
-        \ 'args': '-n' })
+        \ 'args_after': '-n' })
 
     let errorformat = '%f: line %l: %m'
 
