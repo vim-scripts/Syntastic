@@ -18,20 +18,36 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! SyntaxCheckers_scss_scss_lint_IsAvailable() dict
-    return
-        \ executable(self.getExec()) &&
-        \ syntastic#util#versionIsAtLeast(syntastic#util#getVersion(
-        \       self.getExecEscaped() . ' --version'), [0, 12])
+    if !executable(self.getExec())
+        return 0
+    endif
+
+    let ver = syntastic#util#getVersion(self.getExecEscaped() . ' --version')
+    call self.log(self.getExec() . ' version =', ver)
+
+    return syntastic#util#versionIsAtLeast(ver, [0, 12])
 endfunction
 
 function! SyntaxCheckers_scss_scss_lint_GetLocList() dict
     let makeprg = self.makeprgBuild({})
+
     let errorformat = '%f:%l [%t] %m'
-    return SyntasticMake({
+
+    let loclist = SyntasticMake({
         \ 'makeprg': makeprg,
         \ 'errorformat': errorformat,
-        \ 'subtype': 'Style',
         \ 'returns': [0, 1, 2, 65, 66] })
+
+    let cutoff = strlen('Syntax Error: ')
+    for e in loclist
+        if e['text'][: cutoff-1] ==# 'Syntax Error: '
+            let e['text'] = e['text'][cutoff :]
+        else
+            let e['subtype'] = 'Style'
+        endif
+    endfor
+
+    return loclist
 endfunction
 
 call g:SyntasticRegistry.CreateAndRegisterChecker({
@@ -42,4 +58,4 @@ call g:SyntasticRegistry.CreateAndRegisterChecker({
 let &cpo = s:save_cpo
 unlet s:save_cpo
 
-" vim: set et sts=4 sw=4:
+" vim: set sw=4 sts=4 et fdm=marker:
